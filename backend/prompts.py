@@ -7,14 +7,13 @@ skills_and_experience_prompt = """You are an RFP analyst. Your job is to read th
 
 #Output Formatting#
 
-1. Skills and experience should be listed in bullet points.
-2. Never generate anything else other than skills and experience.
-3. etc etc
+1. Be brief and focus only on the most important skills and experiences. 
+2. Start by writing your analysis. Your analysis should include the win themes of the RFP and the most important skills and experience. 
+3. Output in valid markdown format
 
-#Examples#
 
-User: <sample RFP text>  
-Assistant: <skills and experience extracted from the RFP>
+
+
 
 
 """
