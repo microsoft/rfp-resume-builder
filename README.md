@@ -14,6 +14,9 @@ Apply GEN AI to RFP
     npm install
     ```
     - Create a new python virtual environment via the requirements.txt file
+     ```sh
+     pip install -r requirements.txt
+     ```
 
 3. **Configure environment variables**
     - Create a `.env` file in the root directory.
