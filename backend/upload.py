@@ -4,7 +4,7 @@ import time
 from io import BytesIO
 import json
 import concurrent.futures
-from global_vars import add_in_progress_upload, remove_in_progress_upload, set_upload_error
+
 
 from langchain_openai import AzureChatOpenAI
 
@@ -134,18 +134,7 @@ def read_pdf(input_file):
     print("Successfully read the PDF from blob storage and analyzed.")
     return result
 
-def extract_skills_and_experience(result):
-    text = ""
-    for page in result.pages:
-        for line in page.lines:
-            text += line.content
-    
-    messages = [{"role": "system", "content": skills_and_experience_prompt}]
-    messages.append({"role": "user", "content": text})
-    
-    skills_and_experience = inference(primary_llm, messages, "Extract Skills and Experience")
-    
-    return skills_and_experience
+
 
 def process_rfp(file_content, original_filename):
     try:
@@ -153,32 +142,39 @@ def process_rfp(file_content, original_filename):
         upload_file_to_blob(blob_file, original_filename)
 
         adi_result_object = read_pdf(original_filename)
-        skills_and_experience = extract_skills_and_experience(adi_result_object)
+        
+        # Extract text from PDF
+        text = ""
+        for page in adi_result_object.pages:
+            for line in page.lines:
+                text += line.content
 
+        # Prepare messages for LLM
+        messages = [{"role": "system", "content": skills_and_experience_prompt}]
+        messages.append({"role": "user", "content": text})
+
+        # Stream LLM response, yield chunks, and build final response
+        final_response = ""
+        for chunk in primary_llm.stream(messages):
+            chunk_content = chunk.content
+            yield chunk_content
+            final_response += chunk_content
+
+        # Process the final response
         skills_and_experience_json = {
             "id": original_filename + "_analysis",
             "partitionKey": original_filename,
-            "skills_and_experience": skills_and_experience
+            "skills_and_experience": final_response
         }
 
         write_to_cosmos(COSMOS_CONTAINER_ID, skills_and_experience_json)
 
-        for chunk in primary_llm.stream([{"role": "user", "content": f"Format the following skills and experience as markdown:\n\n{skills_and_experience}"}]):
-            yield chunk.content
+        return final_response
 
     except Exception as e:
-        yield f"Error processing RFP {original_filename}: {str(e)}\n"
-
-def start_upload_process(file):
-    original_filename = secure_filename(file.filename)
-    
-    try:
-        file_content = file.read()
-        executor.submit(upload_rfp, file_content, original_filename)
-        return jsonify({"message": "RFP Ingestion process started."}), 202
-    except Exception as e:
-        print(f"Error starting upload process: {str(e)}")
-        return jsonify({"error": "Failed to start upload process"}), 500
+        error_message = f"Error processing RFP {original_filename}: {str(e)}\n"
+        yield error_message
+        return error_message
 
 def upload_file_to_blob(file_obj, filename):
     print("Entering upload_file_to_blob function")
@@ -201,6 +197,6 @@ if __name__ == "__main__":
     input_file = "xxx"
     input_blob = "xxx"
     
-    upload_rfp(input_file)
+    
 
-    exit()
+    

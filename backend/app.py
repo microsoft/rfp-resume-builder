@@ -89,5 +89,28 @@ def get_rfp_analysis():
         print(f"Error querying CosmosDB: {str(e)}")
         return jsonify({"error": "An error occurred while fetching RFP analysis"}), 500
 
+
+@app.route('/search', methods=['POST'])
+def search_employees():
+    data = request.json
+    rfp_name = data.get('rfpName')
+    feedback = data.get('feedback')
+
+    if not rfp_name:
+        return jsonify({"error": "RFP name is required"}), 400
+
+    try:
+        # TODO: Implement actual search logic here
+        # For now, we'll return dummy results
+        dummy_results = [
+            {"name": "JohnDoeResume.pdf", "url": "#"},
+            {"name": "JaneDoeResume.pdf", "url": "#"},
+            {"name": "BobSmithResume.pdf", "url": "#"}
+        ]
+        return jsonify({"results": dummy_results}), 200
+    except Exception as e:
+        print(f"Error during search: {str(e)}")
+        return jsonify({"error": "An error occurred during the search"}), 500
+
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)

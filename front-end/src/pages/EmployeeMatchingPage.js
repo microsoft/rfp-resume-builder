@@ -1,28 +1,46 @@
 import React, { useState } from 'react';
-import { FileText, Users } from 'lucide-react';
+import { FileText, Users, ExternalLink  } from 'lucide-react';
 import RFPSelector from '../components/rfp/RFPSelector';
 
 const EmployeeMatchingPage = () => {
   const [selectedRFP, setSelectedRFP] = useState(null);
   const [matchingResults, setMatchingResults] = useState([]);
   const [refineSearch, setRefineSearch] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
 
   const handleRFPSelect = (rfpName) => {
     setSelectedRFP(rfpName);
   };
 
-  const handleRunMatching = () => {
+  const handleRunMatching = async () => {
     if (!selectedRFP) {
       alert("Please select an RFP before running the matching process.");
       return;
     }
-    // This is where you'd call your backend API to perform the matching
-    // For now, we'll just set some dummy results
-    setMatchingResults([
-      { name: 'JohnDoeResume.pdf' },
-      { name: 'SteveDoeResume.pdf' },
-      { name: 'JaneDoeResume.pdf' },
-    ]);
+    setIsLoading(true);
+    try {
+      const response = await fetch('http://localhost:5000/search', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          rfpName: selectedRFP,
+          feedback: refineSearch,
+        }),
+      });
+      const data = await response.json();
+      if (response.ok) {
+        setMatchingResults(data.results);
+      } else {
+        alert(data.error || 'An error occurred during the search');
+      }
+    } catch (error) {
+      console.error('Error during search:', error);
+      alert('An error occurred during the search');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -69,13 +87,23 @@ const EmployeeMatchingPage = () => {
             <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
               Results
             </h2>
-            {matchingResults.length > 0 ? (
+            {isLoading ? (
+              <p className="text-gray-400 text-lg">Searching...</p>
+            ) : matchingResults.length > 0 ? (
               <div className="space-y-4 overflow-y-auto h-[calc(100%-3rem)]">
                 {matchingResults.map((result, index) => (
                   <div key={index} className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
                     <div className="flex items-center space-x-3">
-                      <FileText className="text-blue-400" size={24} />
-                      <span className="text-gray-200 text-lg">{result.name}</span>
+                      <FileText className="text-blue-400 flex-shrink-0" size={24} />
+                      <a
+                        href={result.url}
+                        className="text-blue-400 text-lg hover:text-blue-300 transition duration-300 flex items-center"
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
+                        {result.name}
+                        <ExternalLink className="ml-2 h-4 w-4" />
+                      </a>
                     </div>
                   </div>
                 ))}
