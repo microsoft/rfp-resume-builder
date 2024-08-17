@@ -33,3 +33,6 @@ Assistant: project management, communication, leadership
 
 """
 
+
+explanation_prompt = """You are an AI assistant. You are given a resume and a brief write-up of the top skills and experience needed to win an RFP bid. 
+Your job is to read the resume and the write-up, and output a brief explanation of why this candidate is a good match for the RFP. Try to keep it to under 4-5 sentences."""

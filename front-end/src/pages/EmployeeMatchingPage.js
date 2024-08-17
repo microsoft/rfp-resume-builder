@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { FileText, Users, ExternalLink  } from 'lucide-react';
+import { FileText, Users, ExternalLink, Briefcase, Star } from 'lucide-react';
 import RFPSelector from '../components/rfp/RFPSelector';
 
 const EmployeeMatchingPage = () => {
@@ -43,6 +43,11 @@ const EmployeeMatchingPage = () => {
     }
   };
 
+  const handleResumeClick = (resumeName) => {
+    // TODO: Implement the logic to fetch and display the resume
+    console.log(`Fetching resume: ${resumeName}`);
+  };
+
   return (
     <div className="flex flex-col h-full pt-4">
       <div className="text-center mb-8 pb-2">
@@ -83,36 +88,47 @@ const EmployeeMatchingPage = () => {
         </div>
 
         <div className="flex-1 px-4">
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100%-4rem)]">
-            <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-              Results
-            </h2>
-            {isLoading ? (
-              <p className="text-gray-400 text-lg">Searching...</p>
-            ) : matchingResults.length > 0 ? (
-              <div className="space-y-4 overflow-y-auto h-[calc(100%-3rem)]">
-                {matchingResults.map((result, index) => (
-                  <div key={index} className="bg-gray-700 bg-opacity-50 rounded-lg p-4">
-                    <div className="flex items-center space-x-3">
-                      <FileText className="text-blue-400 flex-shrink-0" size={24} />
-                      <a
-                        href={result.url}
-                        className="text-blue-400 text-lg hover:text-blue-300 transition duration-300 flex items-center"
-                        target="_blank"
-                        rel="noopener noreferrer"
-                      >
-                        {result.name}
-                        <ExternalLink className="ml-2 h-4 w-4" />
-                      </a>
+        <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100%-4rem)]">
+          <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+            Results
+          </h2>
+          {isLoading ? (
+            <p className="text-gray-400 text-lg">Searching...</p>
+          ) : matchingResults.length > 0 ? (
+            <div className="space-y-4 overflow-y-auto h-[calc(100%-3rem)]">
+              {matchingResults.map((result, index) => (
+                <div key={index} className="bg-gray-700 bg-opacity-50 rounded-lg p-4 hover:bg-opacity-70 transition-all duration-300">
+                  <div className="flex justify-between items-start">
+                    <div className="flex-grow">
+                      <div className="flex items-center space-x-2">
+                        <FileText className="text-blue-400 flex-shrink-0" size={20} />
+                        <button
+                          onClick={() => handleResumeClick(result.name)}
+                          className="text-blue-400 text-lg font-semibold hover:text-blue-300 transition duration-300 flex items-center"
+                        >
+                          {result.name}
+                          <ExternalLink className="ml-2 h-4 w-4" />
+                        </button>
+                      </div>
+                      <div className="flex items-center mt-1 text-gray-300">
+                        <Briefcase className="mr-2" size={16} />
+                        <span className="font-medium">{result.jobTitle}</span>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-1 bg-blue-500 bg-opacity-20 rounded-full px-3 py-1">
+                      <Star className="text-yellow-400" size={16} />
+                      <span className="text-sm font-medium text-blue-300">{result.experienceLevel}</span>
                     </div>
                   </div>
-                ))}
-              </div>
-            ) : (
-              <p className="text-gray-400 text-lg">Run matching to see results</p>
-            )}
-          </div>
+                  <p className="mt-2 text-gray-400 text-sm">{result.explanation}</p>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-gray-400 text-lg">Run matching to see results</p>
+          )}
         </div>
+      </div>
       </div>
     </div>
   );
