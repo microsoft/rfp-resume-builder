@@ -5,6 +5,7 @@ from azure.storage.blob import BlobServiceClient
 from dotenv import load_dotenv
 import os
 from langchain_openai import AzureChatOpenAI
+from helper_functions import get_rfp_analysis_from_db
 
 from upload import process_rfp
 from search import search
@@ -75,21 +76,16 @@ def get_rfps():
 @app.route('/get-rfp-analysis', methods=['GET'])
 def get_rfp_analysis():
     rfp_name = request.args.get('rfp_name')
-    if not rfp_name:
-        return jsonify({"error": "RFP name is required"}), 400
-
-    try:
-        query = f"SELECT c.skills_and_experience FROM c WHERE c.partitionKey = '{rfp_name}'"
-        items = list(container.query_items(query=query, enable_cross_partition_query=True))
-        
-        if items:
-            return jsonify({"skills_and_experience": items[0]['skills_and_experience']}), 200
-        else:
-            return jsonify({"error": "RFP analysis not found"}), 404
-    except Exception as e:
-        print(f"Error querying CosmosDB: {str(e)}")
-        return jsonify({"error": "An error occurred while fetching RFP analysis"}), 500
-
+    result = get_rfp_analysis_from_db(rfp_name)
+    
+    if result == "RFP name is required":
+        return jsonify({"error": result}), 400
+    elif result == "RFP analysis not found":
+        return jsonify({"error": result}), 404
+    elif result.startswith("An error occurred"):
+        return jsonify({"error": result}), 500
+    else:
+        return jsonify({"skills_and_experience": result}), 200
 
 @app.route('/search', methods=['POST'])
 def search_employees():

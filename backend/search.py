@@ -19,7 +19,8 @@ import os
 from langchain_openai import AzureChatOpenAI
 
 from azure.search.documents.models import VectorizedQuery
-from prompts import explanation_prompt
+from prompts import explanation_prompt, query_prompt
+from helper_functions import get_rfp_analysis_from_db
 
 from dotenv import load_dotenv 
 
@@ -77,17 +78,31 @@ primary_llm_json = AzureChatOpenAI(
     azure_endpoint=aoai_endpoint,
     model_kwargs={"response_format": {"type": "json_object"}}
 )
-def search(rfp_name, user_input):
-    # For now, we're using a static search query. You can replace this with dynamic generation later.
-    skills_and_experience = "Cost reduction & elimination, Project estimation, Subcontractor management, Workforce planning & scheduling, Contract negotiation"
-    search_query = "Cost reduction & elimination, Project estimation, Subcontractor management, Workforce planning & scheduling, Contract negotiation"
-    print(search_query)
 
+
+def search(rfp_name, user_input):
+    # Get the necessary skills and experience for this RFP from Cosmos
+    skills_and_experience = get_rfp_analysis_from_db(rfp_name)
+    print(skills_and_experience)
+
+    # Generate a search query based on the skills and experience
+    messages = [
+        {"role": "system", "content": query_prompt},
+        {"role": "user", "content": skills_and_experience}
+    ]
+
+    response = primary_llm.invoke(messages)
+    search_query = response.content
+
+    print("Search Query: " , search_query)
+
+    #Vectorize the search query
     query_vector = generate_embeddings(search_query)
     vector_query = VectorizedQuery(vector=query_vector, k_nearest_neighbors=3, fields="searchVector")
 
+    #Run a hybrid search against the index. We perform a full-text search on the 'content' field and a vector search on the 'searchVector' field
     results = search_client.search(
-        search_text=search_query,  
+        search_text=search_query,
         vector_queries=[vector_query],
         top=3
     )
@@ -132,7 +147,7 @@ def generate_explanation(content, skills_and_experience):
         response = response.content
         print(response)
 
-        #response = "Dummy explanation"
+
         return response
     except Exception as e:
         print(f"Error generating explanation: {str(e)}")
