@@ -28,12 +28,18 @@ from datetime import datetime
 import os  
 from dotenv import load_dotenv  
 from azure.core.credentials import AzureKeyCredential  
-from azure.ai.formrecognizer import DocumentAnalysisClient  
+
 from openai import AzureOpenAI  
 import os
 from langchain_openai import AzureChatOpenAI
 import itertools
 
+
+from azure.ai.documentintelligence import DocumentIntelligenceClient
+from azure.ai.documentintelligence.models import AnalyzeResult
+
+
+from azure.core.credentials import AzureKeyCredential
 
 import tiktoken
 from dotenv import load_dotenv 
@@ -57,10 +63,10 @@ aoai_deployment = os.getenv("AZURE_OPENAI_DEPLOYMENT_NAME")
 aoai_key = os.getenv("AZURE_OPENAI_API_KEY")
 aoai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 
+endpoint = form_recognizer_endpoint
+credential = AzureKeyCredential(form_recognizer_key)
+document_intelligence_client = DocumentIntelligenceClient(endpoint, credential)
 
-document_analysis_client = DocumentAnalysisClient(
-    endpoint=form_recognizer_endpoint, credential=AzureKeyCredential(form_recognizer_key)
-)
 
 search_index_client = SearchIndexClient(ai_search_endpoint, AzureKeyCredential(ai_search_key))
 search_client = SearchClient(ai_search_endpoint, ai_search_index, AzureKeyCredential(ai_search_key))
@@ -101,7 +107,7 @@ and output certain info in valid JSON format. Here is what you should be extract
 
 1. experienceLevel - either entry, mid, or senior
 2. jobTitle - the title of the job the resume is for
-3. skills_and_expereince - a succinct list of 3-5 top skills and experiences.   
+3. skills_and_experience - a succinct list of 3-5 top skills and experiences.   
 
 
 #Examples#
@@ -234,16 +240,18 @@ def create_index():
 
 def read_pdf(input_file):
     blob_url = f"https://{storage_account_name}.blob.core.windows.net/{container_name}/{input_file}"
-    poller = document_analysis_client.begin_analyze_document_from_url("prebuilt-layout", blob_url)
-    result = poller.result()
-    print("Successfully read the PDF from blob storage and analyzed.")
+    analyze_request = {
+        "urlSource": blob_url
+    }
+    poller = document_intelligence_client.begin_analyze_document("prebuilt-layout", analyze_request=analyze_request)
+    result: AnalyzeResult = poller.result()
+    #print(result.content)
+    
+    
 
     #read result object into a full text variable
-    full_text = ""
-    for page in result.pages:
-        for line in page.lines:
-            full_text += line.content + "\n"
-
+    full_text = result.content
+    print("Successfully read the PDF from blob storage with doc intelligence and extracted text.")
     
     return full_text
 

@@ -11,7 +11,9 @@ from langchain_openai import AzureChatOpenAI
 from prompts import skills_and_experience_prompt
 
 from azure.core.credentials import AzureKeyCredential
-from azure.ai.formrecognizer import DocumentAnalysisClient
+from azure.ai.documentintelligence import DocumentIntelligenceClient
+from azure.ai.documentintelligence.models import AnalyzeResult
+
 from azure.storage.blob import BlobServiceClient
 import azure.cosmos.cosmos_client as cosmos_client
 import azure.cosmos.exceptions as exceptions
@@ -46,9 +48,9 @@ aoai_key = os.getenv("AZURE_OPENAI_API_KEY")
 aoai_endpoint = os.getenv("AZURE_OPENAI_ENDPOINT")
 
 # Initialize clients
-document_analysis_client = DocumentAnalysisClient(
-    endpoint=form_recognizer_endpoint, credential=AzureKeyCredential(form_recognizer_key)
-)
+endpoint = form_recognizer_endpoint
+credential = AzureKeyCredential(form_recognizer_key)
+document_intelligence_client = DocumentIntelligenceClient(endpoint, credential)
 
 primary_llm = AzureChatOpenAI(
     azure_deployment=aoai_deployment,
@@ -129,8 +131,11 @@ def write_to_cosmos(container, json):
 
 def read_pdf(input_file):
     blob_url = f"https://{storage_account_name}.blob.core.windows.net/{container_name}/{input_file}"
-    poller = document_analysis_client.begin_analyze_document_from_url("prebuilt-layout", blob_url)
-    result = poller.result()
+    analyze_request = {
+        "urlSource": blob_url
+    }
+    poller = document_intelligence_client.begin_analyze_document("prebuilt-layout", analyze_request=analyze_request)
+    result: AnalyzeResult = poller.result()
     print("Successfully read the PDF from blob storage and analyzed.")
     return result
 
@@ -144,10 +149,7 @@ def process_rfp(file_content, original_filename):
         adi_result_object = read_pdf(original_filename)
         
         # Extract text from PDF
-        text = ""
-        for page in adi_result_object.pages:
-            for line in page.lines:
-                text += line.content
+        text = adi_result_object.content
 
         # Prepare messages for LLM
         messages = [{"role": "system", "content": skills_and_experience_prompt}]
