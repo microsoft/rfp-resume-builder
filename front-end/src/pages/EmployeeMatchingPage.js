@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Users, ExternalLink, Briefcase, Star, Zap, ChevronDown, ChevronRight } from 'lucide-react';
 import RFPSelector from '../components/rfp/RFPSelector';
+import NewWindow from 'react-new-window'
 
 const EmployeeMatchingPage = () => {
   const [selectedRFP, setSelectedRFP] = useState(null);
@@ -10,7 +11,9 @@ const EmployeeMatchingPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [enhancedResults, setEnhancedResults] = useState([]);
-
+  const [pdfData, setPdfData] = useState(null);
+ // const [showNewWindow, setShowNewWindow] = useState(false);
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
   const handleRFPSelect = (rfpName) => {
     setSelectedRFP(rfpName);
   };
@@ -48,6 +51,37 @@ const EmployeeMatchingPage = () => {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const handleResumeClick = async (resumeName) => {
+    // TODO: Implement the logic to fetch and display the resume
+    console.log(`Fetching resume: ${resumeName}`);
+
+    if (!selectedRFP) {
+      alert("Please select an RFP before running the matching process.");
+      return;
+    }
+    setIsLoading(true);
+
+        const fetchDocument = async () => {
+          try {
+            const response = await fetch('http://localhost:5000/resume?resumeName=' + resumeName, { headers: { 'Access-Control-Allow-Origin': 'http://localhost:3001' }, method: 'GET', responseType: 'arraybuffer'});
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfData(url);
+          } catch (error) {
+            console.error('Error fetching document:', error);
+            alert('An error occurred during the fetch');
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+        fetchDocument();
+
+        if (pdfData) {
+          setIsWindowOpen(true);
+        }
   };
 
   const handleEnhanceResumes = async () => {
@@ -151,6 +185,7 @@ const EmployeeMatchingPage = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center"
+                              onClick={() => handleResumeClick(result.name)}
                             >
                               {result.name}
                               <ExternalLink className="ml-2 h-4 w-4" />
@@ -205,6 +240,14 @@ const EmployeeMatchingPage = () => {
             </div>
           )}
 
+          {pdfData && isWindowOpen && (
+          <NewWindow onUnload={() => setIsWindowOpen(false)}>
+          <div>
+            <iframe src={pdfData} width="100%" height="600px" title="Resume Viewer"></iframe>
+          </div>
+          </NewWindow>
+          )}
+
           {enhancedResults.length > 0 && (
             <div className="mt-6 bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg">
               <h3 className="text-xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-green-400 to-blue-500">
@@ -216,7 +259,7 @@ const EmployeeMatchingPage = () => {
                     <a
                       href={result.enhancedResumeLink}
                       className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center"
-                      onClick={(e) => e.preventDefault()} // Prevent default action for now
+                      onClick={() => handleResumeClick(result.name)} // Prevent default action for now
                     >
                       {result.name}
                       <ExternalLink className="ml-2 h-4 w-4" />
