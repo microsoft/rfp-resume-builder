@@ -8,10 +8,7 @@ from azure.cosmos.partition_key import PartitionKey
 
 
 # Azure Cosmos DB
-COSMOS_HOST = os.getenv("COSMOS_HOST")
-COSMOS_MASTER_KEY = os.getenv("COSMOS_MASTER_KEY")
-COSMOS_DATABASE_ID = os.getenv("COSMOS_DATABASE_ID")
-COSMOS_CONTAINER_ID = os.getenv("COSMOS_CONTAINER_ID")
+
 
 
 
@@ -19,6 +16,11 @@ COSMOS_CONTAINER_ID = os.getenv("COSMOS_CONTAINER_ID")
 def get_rfp_analysis_from_db(rfp_name):
     if not rfp_name:
         return "RFP name is required"
+
+    COSMOS_HOST = os.getenv("COSMOS_HOST")
+    COSMOS_MASTER_KEY = os.getenv("COSMOS_MASTER_KEY")
+    COSMOS_DATABASE_ID = os.getenv("COSMOS_DATABASE_ID")
+    COSMOS_CONTAINER_ID = os.getenv("COSMOS_CONTAINER_ID")
 
     client = cosmos_client.CosmosClient(COSMOS_HOST, {'masterKey': COSMOS_MASTER_KEY}, user_agent="CosmosDBAgent", user_agent_overwrite=True)
     try:
