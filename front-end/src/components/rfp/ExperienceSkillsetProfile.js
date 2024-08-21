@@ -57,7 +57,7 @@ const ExperienceSkillsetProfile = ({ rfp, uploadStream, isUploading }) => {
   };
 
   return (
-    <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100vh-250px)] flex flex-col">
+    <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100vh-250px)] flex flex-col border border-gray-700">
       <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
         Experience & Skillset Profile
       </h2>

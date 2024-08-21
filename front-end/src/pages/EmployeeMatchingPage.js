@@ -70,11 +70,11 @@ const EmployeeMatchingPage = () => {
           />
           <button
             onClick={handleRunMatching}
-            className="w-full bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 text-white font-bold py-2 px-4 rounded-full transition duration-300"
+            className={`w-full bg-blue-600 hover:bg-green text-white font-bold py-2 px-4 rounded-full transition duration-300`}
           >
             Run Matching
           </button>
-          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-4 shadow-lg">
+          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-4 shadow-lg border border-gray-700">
             <h2 className="text-xl font-semibold mb-3 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
               Refine Search
             </h2>
@@ -88,47 +88,47 @@ const EmployeeMatchingPage = () => {
         </div>
 
         <div className="flex-1 px-4">
-        <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100%-4rem)]">
-          <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
-            Results
-          </h2>
-          {isLoading ? (
-            <p className="text-gray-400 text-lg">Searching...</p>
-          ) : matchingResults.length > 0 ? (
-            <div className="space-y-4 overflow-y-auto h-[calc(100%-3rem)]">
-              {matchingResults.map((result, index) => (
-                <div key={index} className="bg-gray-700 bg-opacity-50 rounded-lg p-4 hover:bg-opacity-70 transition-all duration-300">
-                  <div className="flex justify-between items-start">
-                    <div className="flex-grow">
-                      <div className="flex items-center space-x-2">
-                        <FileText className="text-blue-400 flex-shrink-0" size={20} />
-                        <button
-                          onClick={() => handleResumeClick(result.name)}
-                          className="text-blue-400 text-lg font-semibold hover:text-blue-300 transition duration-300 flex items-center"
-                        >
-                          {result.name}
-                          <ExternalLink className="ml-2 h-4 w-4" />
-                        </button>
+          <div className="bg-gray-800 bg-opacity-50 rounded-xl p-6 shadow-lg h-[calc(100%-4rem)] border border-gray-700">
+            <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
+              Results
+            </h2>
+            {isLoading ? (
+              <p className="text-gray-400 text-lg">Searching...</p>
+            ) : matchingResults.length > 0 ? (
+              <div className="space-y-4 overflow-y-auto h-[calc(100%-3rem)]">
+                {matchingResults.map((result, index) => (
+                  <div key={index} className="bg-gray-700 bg-opacity-50 rounded-lg p-4 hover:bg-opacity-70 transition-all duration-300">
+                    <div className="flex justify-between items-start">
+                      <div className="flex-grow">
+                        <div className="flex items-center space-x-2">
+                          <FileText className="text-blue-400 flex-shrink-0" size={20} />
+                          <button
+                            onClick={() => handleResumeClick(result.name)}
+                            className="text-blue-400 text-lg font-semibold hover:text-blue-300 transition duration-300 flex items-center"
+                          >
+                            {result.name}
+                            <ExternalLink className="ml-2 h-4 w-4" />
+                          </button>
+                        </div>
+                        <div className="flex items-center mt-1 text-gray-300">
+                          <Briefcase className="mr-2" size={16} />
+                          <span className="font-medium">{result.jobTitle}</span>
+                        </div>
                       </div>
-                      <div className="flex items-center mt-1 text-gray-300">
-                        <Briefcase className="mr-2" size={16} />
-                        <span className="font-medium">{result.jobTitle}</span>
+                      <div className="flex items-center space-x-1 bg-blue-500 bg-opacity-20 rounded-full px-3 py-1">
+                        <Star className="text-yellow-400" size={16} />
+                        <span className="text-sm font-medium text-blue-300">{result.experienceLevel}</span>
                       </div>
                     </div>
-                    <div className="flex items-center space-x-1 bg-blue-500 bg-opacity-20 rounded-full px-3 py-1">
-                      <Star className="text-yellow-400" size={16} />
-                      <span className="text-sm font-medium text-blue-300">{result.experienceLevel}</span>
-                    </div>
+                    <p className="mt-2 text-gray-400 text-sm">{result.explanation}</p>
                   </div>
-                  <p className="mt-2 text-gray-400 text-sm">{result.explanation}</p>
-                </div>
-              ))}
-            </div>
-          ) : (
-            <p className="text-gray-400 text-lg">Run matching to see results</p>
-          )}
+                ))}
+              </div>
+            ) : (
+              <p className="text-gray-400 text-lg">Run matching to see results</p>
+            )}
+          </div>
         </div>
-      </div>
       </div>
     </div>
   );
