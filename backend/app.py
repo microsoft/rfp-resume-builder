@@ -105,7 +105,27 @@ def search_employees():
         print(f"Error during search: {str(e)}")
         return jsonify({"error": "An error occurred during the search"}), 500
 
+def generate_mock_enhanced_resume_link(resume_id, rfp_name):
+    # This is a mock function to generate a fake enhanced resume link
+    return f"http://example.com/enhanced-resumes/{resume_id}.pdf"
 
+@app.route('/enhance', methods=['POST'])
+def enhance_resume():
+    data = request.json
+    resume_name = data.get('resumeName')
+    rfp_name = data.get('rfpName')
+    print(f"Enhancing resume {resume_name} for RFP {rfp_name}")
+
+    if not resume_name or not rfp_name:
+        return jsonify({"error": "Missing resumeId or rfpName"}), 400
+
+    # In a real implementation, you would process the resume here
+    # For this mock-up, we'll just generate a fake enhanced resume link
+    enhanced_resume_link = generate_mock_enhanced_resume_link(resume_name, rfp_name)
+
+    return jsonify({
+        "enhancedResumeLink": enhanced_resume_link
+    }), 200
 
 if __name__ == '__main__':
     app.run(debug=True, threaded=True)

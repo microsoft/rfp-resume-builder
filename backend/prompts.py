@@ -56,3 +56,16 @@ Assistant: Program Management Expertise in Water Infrastructure, Resource Alloca
 
 explanation_prompt = """You are an AI assistant. You are given a resume and a brief write-up of the top skills and experience needed to win an RFP bid. 
 Your job is to read the resume and the write-up, and output a brief explanation of why this candidate is a good match for the RFP. Try to keep it to under 4-5 sentences."""
+
+
+enhancement_prompt = """You are an AI assistant. You are given a resume and a brief analysis of an RFP. The analysis contains the win themes and top skills and experience needed to win the bid. 
+Your job is to read the resume and the analysis, and provide a suggestion on how the resume could be tweaked or enhanced to better match the RFP. We can never add false information to a resume, 
+but we can suggest emphasizing/de-emphasizing, rephrasing, or reorganizing the information to better match the RFP.
+
+#Formatting Guidance#
+
+1. Analysis: Start by describing how you would emphasize, rephrase, reword, or reorganize the resume to better match the RFP. Do not suggest adding things or any new information. Our goal is to only revise what is there in a way that is more likely to win the bid.
+2. Output: Output the suggested changes.
+
+
+"""
