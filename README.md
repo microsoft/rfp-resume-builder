@@ -3,8 +3,12 @@ Apply GEN AI to RFP
 
 
 ## Setup steps
-
-1. **Clone the repository**
+1. **Prerequisite**
+    - Create a blob storage account
+    - Create a Document intelligence services
+    - Create a OpenAI service and deploy a model
+    - Create manage identity between Blob sorage and Document intelligence
+2. **Clone the repository**
     
 
 2. **Install dependencies**
@@ -14,6 +18,9 @@ Apply GEN AI to RFP
     npm install
     ```
     - Create a new python virtual environment via the requirements.txt file
+     ```sh
+     pip install -r requirements.txt
+     ```
 
 3. **Configure environment variables**
     - Create a `.env` file in the root directory.
