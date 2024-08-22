@@ -11,6 +11,7 @@ const EmployeeMatchingPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [enhancedResults, setEnhancedResults] = useState([]);
+  const [downloadResults, setDownloadResults] = useState([]);
   const [pdfData, setPdfData] = useState(null);
  // const [showNewWindow, setShowNewWindow] = useState(false);
   const [isWindowOpen, setIsWindowOpen] = useState(false);
@@ -90,6 +91,50 @@ const EmployeeMatchingPage = () => {
       enhancedResumeLink: `#${resumeName.replace('.docx', '')}_enhanced`
     }));
     setEnhancedResults(newEnhancedResults);
+  };
+
+  const handleDownloadResumes = async () => {
+    const newDownloadResults = selectedRows.map(resumeName => ({
+      name: resumeName
+    }));
+    setDownloadResults(newDownloadResults);
+
+
+    const handleDownload = async (resumeName) => {
+      setIsLoading(true);
+    
+      try {
+        const response = await fetch(`http://localhost:5000/download?resumeName=${resumeName}`, {
+          method: 'GET',
+          headers: {
+            'Access-Control-Allow-Origin': 'http://localhost:3001',
+          },
+        });
+    
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+    
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = resumeName; // Set the filename
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (error) {
+        console.error('Error fetching document:', error);
+        alert('An error occurred during the fetch');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    for (const resumeName of downloadResults) {
+        handleDownload(resumeName.name);
+    }
+
   };
 
   const handleRowSelect = (resumeName) => {
@@ -227,7 +272,7 @@ const EmployeeMatchingPage = () => {
           
           {matchingResults.length > 0 && (
             <div className="mt-4 flex justify-end">
-              <button
+              <button style={{marginRight: '25px'}}
                 onClick={handleEnhanceResumes}
                 disabled={selectedRows.length === 0}
                 className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center ${
@@ -236,6 +281,17 @@ const EmployeeMatchingPage = () => {
               >
                 <Zap className="mr-2" size={20} />
                 Enhance Selected Resumes
+              </button>
+            
+              <button
+                onClick={handleDownloadResumes}
+                disabled={selectedRows.length === 0}
+                className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center ${
+                  selectedRows.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <Zap className="mr-2" size={20} />
+                Download Resumes
               </button>
             </div>
           )}

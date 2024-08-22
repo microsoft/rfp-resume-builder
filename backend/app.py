@@ -138,12 +138,7 @@ def enhance_resume():
 @app.route('/resume', methods=['GET'])
 def get_resume():
     resume_name = request.args.get('resumeName')[:-4] + 'pdf'
-  #  file_url = 'https://djg0sandbox0storage.blob.core.windows.net/resumes/pdf/' + resume_name + '?sp=r&st=2024-08-21T16:09:56Z&se=2024-08-22T00:09:56Z&spr=https&sv=2022-11-02&sr=b&sig=IRqPzIg7aLBu7QgFimVk1puQwFHE51mLag%2Fhy7kPK%2FE%3D'
-
-  #  response = requests.get(file_url, verify=True)
-  #  if response.status_code == 200:
-  #  blob_service_client = BlobServiceClient.from_connection_string(connect_str)
-   # blob_resume_container_client = blob_service_client.get_container_client(container_name + '/pdf')
+  
     blob_client = blob_resume_container_client.get_blob_client('pdf/' + resume_name)
     download_stream = blob_client.download_blob()
     file_content = download_stream.readall()
@@ -151,6 +146,21 @@ def get_resume():
     if file_content:
         response = make_response(file_content)
         response.headers['Content-Type'] = 'application/pdf'
+        return response
+    else:
+        return make_response('Failed to download file', 500)
+    
+@app.route('/download', methods=['GET'])
+def download_resume():
+    resume_name = request.args.get('resumeName')
+  
+    blob_client = blob_resume_container_client.get_blob_client('processed/' + resume_name)
+    download_stream = blob_client.download_blob()
+    file_content = download_stream.readall()
+    
+    if file_content:
+        response = make_response(file_content)
+        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
         return response
     else:
         return make_response('Failed to download file', 500)
