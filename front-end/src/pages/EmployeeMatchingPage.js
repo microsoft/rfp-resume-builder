@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { FileText, Users, ExternalLink, Briefcase, Star, Zap, ChevronDown, ChevronRight } from 'lucide-react';
 import RFPSelector from '../components/rfp/RFPSelector';
+import NewWindow from 'react-new-window'
 
 const EmployeeMatchingPage = () => {
   const [selectedRFP, setSelectedRFP] = useState(null);
@@ -10,7 +11,10 @@ const EmployeeMatchingPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [enhancedResults, setEnhancedResults] = useState([]);
-
+  const [downloadResults, setDownloadResults] = useState([]);
+  const [pdfData, setPdfData] = useState(null);
+ // const [showNewWindow, setShowNewWindow] = useState(false);
+  const [isWindowOpen, setIsWindowOpen] = useState(false);
   const handleRFPSelect = (rfpName) => {
     setSelectedRFP(rfpName);
   };
@@ -50,12 +54,87 @@ const EmployeeMatchingPage = () => {
     }
   };
 
+  const handleResumeClick = async (resumeName) => {
+    // TODO: Implement the logic to fetch and display the resume
+    console.log(`Fetching resume: ${resumeName}`);
+
+    if (!selectedRFP) {
+      alert("Please select an RFP before running the matching process.");
+      return;
+    }
+    setIsLoading(true);
+
+        const fetchDocument = async () => {
+          try {
+            const response = await fetch('http://localhost:5000/resume?resumeName=' + resumeName, { headers: { 'Access-Control-Allow-Origin': 'http://localhost:3001' }, method: 'GET', responseType: 'arraybuffer'});
+            const blob = await response.blob();
+            const url = URL.createObjectURL(blob);
+            setPdfData(url);
+          } catch (error) {
+            console.error('Error fetching document:', error);
+            alert('An error occurred during the fetch');
+          } finally {
+            setIsLoading(false);
+          }
+        };
+    
+        fetchDocument();
+
+        if (pdfData) {
+          setIsWindowOpen(true);
+        }
+  };
+
   const handleEnhanceResumes = async () => {
     const newEnhancedResults = selectedRows.map(resumeName => ({
       name: resumeName,
       enhancedResumeLink: `#${resumeName.replace('.docx', '')}_enhanced`
     }));
     setEnhancedResults(newEnhancedResults);
+  };
+
+  const handleDownloadResumes = async () => {
+    const newDownloadResults = selectedRows.map(resumeName => ({
+      name: resumeName
+    }));
+    setDownloadResults(newDownloadResults);
+
+
+    const handleDownload = async (resumeName) => {
+      setIsLoading(true);
+    
+      try {
+        const response = await fetch(`http://localhost:5000/download?resumeName=${resumeName}`, {
+          method: 'GET',
+          headers: {
+            'Access-Control-Allow-Origin': 'http://localhost:3001',
+          },
+        });
+    
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+    
+        const blob = await response.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = resumeName; // Set the filename
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+      } catch (error) {
+        console.error('Error fetching document:', error);
+        alert('An error occurred during the fetch');
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    for (const resumeName of downloadResults) {
+        handleDownload(resumeName.name);
+    }
+
   };
 
   const handleRowSelect = (resumeName) => {
@@ -151,6 +230,7 @@ const EmployeeMatchingPage = () => {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center"
+                              onClick={() => handleResumeClick(result.name)}
                             >
                               {result.name}
                               <ExternalLink className="ml-2 h-4 w-4" />
@@ -192,7 +272,7 @@ const EmployeeMatchingPage = () => {
           
           {matchingResults.length > 0 && (
             <div className="mt-4 flex justify-end">
-              <button
+              <button style={{marginRight: '25px'}}
                 onClick={handleEnhanceResumes}
                 disabled={selectedRows.length === 0}
                 className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center ${
@@ -202,7 +282,26 @@ const EmployeeMatchingPage = () => {
                 <Zap className="mr-2" size={20} />
                 Enhance Selected Resumes
               </button>
+            
+              <button
+                onClick={handleDownloadResumes}
+                disabled={selectedRows.length === 0}
+                className={`bg-green-500 hover:bg-green-600 text-white font-bold py-2 px-4 rounded-full transition duration-300 flex items-center ${
+                  selectedRows.length === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                }`}
+              >
+                <Zap className="mr-2" size={20} />
+                Download Resumes
+              </button>
             </div>
+          )}
+
+          {pdfData && isWindowOpen && (
+          <NewWindow onUnload={() => setIsWindowOpen(false)}>
+          <div>
+            <iframe src={pdfData} width="100%" height="600px" title="Resume Viewer"></iframe>
+          </div>
+          </NewWindow>
           )}
 
           {enhancedResults.length > 0 && (
@@ -216,7 +315,7 @@ const EmployeeMatchingPage = () => {
                     <a
                       href={result.enhancedResumeLink}
                       className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center"
-                      onClick={(e) => e.preventDefault()} // Prevent default action for now
+                      onClick={() => handleResumeClick(result.name)} // Prevent default action for now
                     >
                       {result.name}
                       <ExternalLink className="ml-2 h-4 w-4" />
