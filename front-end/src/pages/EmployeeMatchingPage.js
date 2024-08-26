@@ -57,7 +57,8 @@ const EmployeeMatchingPage = () => {
       alert("Please select an RFP before viewing resumes.");
       return;
     }
-    setIsLoading(true);
+    // setIsLoading(true);
+    document.body.style.cursor = 'progress';
 
     try {
       const response = await fetch('http://localhost:5000/resume?resumeName=' + resumeName, { 
@@ -73,7 +74,8 @@ const EmployeeMatchingPage = () => {
       console.error('Error fetching document:', error);
       alert('An error occurred while fetching the resume');
     } finally {
-      setIsLoading(false);
+     // setIsLoading(false);
+     document.body.style.cursor = 'default'
     }
   };
 
