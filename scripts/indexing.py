@@ -105,7 +105,7 @@ primary_llm_json = AzureChatOpenAI(
 resume_indexing_prompt = """You are an AI assistant. Your job is to read the input resume, 
 and output certain info in valid JSON format. Here is what you should be extracting:
 
-1. experienceLevel - either entry, mid, or senior
+1. experienceLevel - years of experience (an integer)
 2. jobTitle - the title of the job the resume is for
 3. skills_and_experience - a succinct list of 3-5 top skills and experiences.   
 
@@ -159,7 +159,7 @@ Microsoft Office
 Google Suite
 
 
-Assistant: {'experienceLevel': 'mid', 'jobTitle': 'General Contractor', 'skills_and_experience': ['Cost reduction & elimination', 'Project estimation', 'Subcontractor management', 'Workforce planning & scheduling', 'Contract negotiation']}
+Assistant: {'experienceLevel': '5', 'jobTitle': 'General Contractor', 'skills_and_experience': ['Cost reduction & elimination', 'Project estimation', 'Subcontractor management', 'Workforce planning & scheduling', 'Contract negotiation']}
 
 """
 
@@ -210,8 +210,8 @@ def create_index():
     fields = [
         SimpleField(name="id", type=SearchFieldDataType.String, key=True, filterable=True),
         SimpleField(name="date", type=SearchFieldDataType.DateTimeOffset, filterable=True, facetable=True),
-        SimpleField(name="jobTitle", type=SearchFieldDataType.String, filterable=True, facetable=True),
-        SimpleField(name="experienceLevel", type=SearchFieldDataType.String, filterable=True, facetable=True),
+        SearchableField(name="jobTitle", type=SearchFieldDataType.String, filterable=True, facetable=True),
+        SimpleField(name="experienceLevel", type=SearchFieldDataType.Int32, filterable=True, facetable=True),  # Updated to Int32
         SearchableField(name="content", type=SearchFieldDataType.String),
         SearchableField(name="sourceFileName", type=SearchFieldDataType.String, filterable=True),
         SearchField(name="searchVector", type=SearchFieldDataType.Collection(SearchFieldDataType.Single),
@@ -355,7 +355,7 @@ def reset_processed_files():
 
 if __name__ == "__main__":
 
-    #reset_processed_files()
+    reset_processed_files()
 
     create_index()
 

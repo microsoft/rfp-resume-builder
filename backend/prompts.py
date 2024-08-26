@@ -121,3 +121,8 @@ but we can suggest emphasizing/de-emphasizing, rephrasing, or reorganizing the i
 
 relevant_projects_prompt = """You are an AI assistant. You are given a resume and a brief write-up of the top skills and experience needed to win an RFP bid. 
 Your job is to read the resume and the write-up, and output how many of the projects in the resume are relevant to the RFP. Output only a single number"""
+
+
+
+reorder_work_experience_prompt = """You are an AI assistant. You are given a resume and a brief analysis of an RFP. You must re-order the work experience section of the resume to better match the RFP analysis.
+More relevant projects should be at the start of the work experience section. Less relevant projects should be at the end. You can't change any wording or add/remove anything, only re-order the projects."""
