@@ -62,7 +62,7 @@ const EmployeeMatchingPage = () => {
   };
 
   const handleEnhanceResumes = async () => {
-    setIsLoading(true);
+    document.body.style.cursor = 'progress';
     const enhancedResults = [];
 
     for (const resumeName of selectedRows) {
@@ -91,6 +91,8 @@ const EmployeeMatchingPage = () => {
         console.error(`Error enhancing resume ${resumeName}:`, error);
         // Optionally, you can add error handling UI here
       }
+      finally {
+     document.body.style.cursor = 'default'
     }
 
     setEnhancedResults(enhancedResults);
