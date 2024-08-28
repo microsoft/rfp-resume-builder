@@ -53,7 +53,7 @@ const RFPUploadPage = () => {
     <div className="flex flex-col h-screen max-w-7xl mx-auto px-4 py-6 overflow-hidden">
       <div className="flex flex-1 gap-4 overflow-hidden">
         <div className="flex-1 flex flex-col overflow-hidden pr-4">
-          <div className="flex-1 overflow-hidden mb-6">
+          <div className="flex-1">
             <ExperienceSkillsetProfile 
               rfp={selectedRFP} 
               uploadStream={uploadStream} 

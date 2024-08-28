@@ -61,7 +61,7 @@ const ExperienceSkillsetProfile = ({ rfp, uploadStream, isUploading }) => {
       <h2 className="text-2xl font-semibold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-500">
         Experience & Skillset Profile
       </h2>
-      <div className="overflow-y-auto flex-grow">
+      <div className="overflow-y-auto flex-grow px-6">
         {(isUploading || isLoading) && !isStreaming ? (
           <div className="flex items-center justify-center h-full">
             <div className="text-center">
