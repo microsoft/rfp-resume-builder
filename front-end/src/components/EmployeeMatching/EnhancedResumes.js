@@ -1,7 +1,7 @@
 import React from 'react';
 import { ExternalLink } from 'lucide-react';
 
-const EnhancedResumes = ({ enhancedResults, onResumeClick }) => {
+const EnhancedResumes = ({ enhancedResults, onResumeClick, selectedEnhancedResumes, onEnhancedResumeSelect }) => {
   if (enhancedResults.length === 0) {
     return null;
   }
@@ -13,10 +13,16 @@ const EnhancedResumes = ({ enhancedResults, onResumeClick }) => {
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {enhancedResults.map((result) => (
-          <div key={result.enhancedResumeName} className="bg-gray-700 bg-opacity-40 rounded-lg p-4 hover:bg-opacity-60 transition-all duration-300">
+          <div key={result.enhancedResumeName} className="bg-gray-700 bg-opacity-40 rounded-lg p-4 hover:bg-opacity-60 transition-all duration-300 flex items-center">
+            <input
+              type="checkbox"
+              checked={selectedEnhancedResumes.includes(result.enhancedResumeName)}
+              onChange={() => onEnhancedResumeSelect(result.enhancedResumeName)}
+              className="form-checkbox h-5 w-5 text-blue-600 transition duration-150 ease-in-out mr-3"
+            />
             <a
               href="#"
-              className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center"
+              className="text-blue-400 hover:text-blue-300 transition duration-300 flex items-center flex-grow"
               onClick={(e) => {
                 e.preventDefault();
                 onResumeClick(result.enhancedResumeName);
