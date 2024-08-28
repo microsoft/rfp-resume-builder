@@ -15,8 +15,8 @@ const EmployeeMatchingPage = () => {
   const [selectedRows, setSelectedRows] = useState([]);
   const [expandedRows, setExpandedRows] = useState({});
   const [enhancedResults, setEnhancedResults] = useState([]);
-  const [pdfData, setPdfData] = useState(null);
   const [isWindowOpen, setIsWindowOpen] = useState(false);
+  const [viewingResume, setViewingResume] = useState(null);
 
   const handleRunMatching = async () => {
     if (!selectedRFP) {
@@ -52,37 +52,49 @@ const EmployeeMatchingPage = () => {
     }
   };
 
-  const handleResumeClick = async (resumeName) => {
+  const handleResumeClick = (resumeName) => {
     if (!selectedRFP) {
       alert("Please select an RFP before viewing resumes.");
       return;
     }
-    setIsLoading(true);
-
-    try {
-      const response = await fetch('http://localhost:5000/resume?resumeName=' + resumeName, { 
-        headers: { 'Access-Control-Allow-Origin': 'http://localhost:3001' }, 
-        method: 'GET', 
-        responseType: 'arraybuffer'
-      });
-      const blob = await response.blob();
-      const url = URL.createObjectURL(blob);
-      setPdfData(url);
-      setIsWindowOpen(true);
-    } catch (error) {
-      console.error('Error fetching document:', error);
-      alert('An error occurred while fetching the resume');
-    } finally {
-      setIsLoading(false);
-    }
+    setViewingResume({ name: resumeName });
+    setIsWindowOpen(true);
   };
 
   const handleEnhanceResumes = async () => {
-    const newEnhancedResults = selectedRows.map(resumeName => ({
-      name: resumeName,
-      enhancedResumeLink: `#${resumeName.replace('.docx', '')}_enhanced`
-    }));
-    setEnhancedResults(newEnhancedResults);
+    setIsLoading(true);
+    const enhancedResults = [];
+
+    for (const resumeName of selectedRows) {
+      try {
+        const response = await fetch('http://localhost:5000/enhance', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            resumeName: resumeName,
+            rfpName: selectedRFP,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error('Network response was not ok');
+        }
+
+        const data = await response.json();
+        enhancedResults.push({
+          name: resumeName,
+          enhancedResumeName: data.enhancedResumeName,
+        });
+      } catch (error) {
+        console.error(`Error enhancing resume ${resumeName}:`, error);
+        // Optionally, you can add error handling UI here
+      }
+    }
+
+    setEnhancedResults(enhancedResults);
+    setIsLoading(false);
   };
 
   const handleDownloadResumes = async () => {
@@ -154,7 +166,7 @@ const EmployeeMatchingPage = () => {
             setExpandedRows={setExpandedRows}
             onResumeClick={handleResumeClick}
           />
-          
+
           <ActionButtons
             selectedRows={selectedRows}
             onEnhanceResumes={handleEnhanceResumes}
@@ -162,14 +174,17 @@ const EmployeeMatchingPage = () => {
           />
 
           <EnhancedResumes
-            enhancedResults={enhancedResults}
-            onResumeClick={handleResumeClick}
-          />
+                  enhancedResults={enhancedResults}
+                  onResumeClick={handleResumeClick}
+            />
 
           <ResumeViewer
-            pdfData={pdfData}
-            isWindowOpen={isWindowOpen}
-            onClose={() => setIsWindowOpen(false)}
+                  resumeName={viewingResume?.name}
+                  isWindowOpen={isWindowOpen}
+                  onClose={() => {
+                    setIsWindowOpen(false);
+                    setViewingResume(null);
+                  }}
           />
         </div>
       </div>

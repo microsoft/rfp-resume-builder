@@ -2,4 +2,3 @@
 .env
 node_modules/
 __pycache__/
-backend/enhance.py
