@@ -97,6 +97,7 @@ const EmployeeMatchingPage = () => {
 
     setEnhancedResults(enhancedResults);
     setIsLoading(false);
+    };
   };
 
   const handleDownloadResumes = async () => {
