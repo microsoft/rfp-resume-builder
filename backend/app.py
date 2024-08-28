@@ -171,16 +171,28 @@ def get_resume():
 @app.route('/download', methods=['GET'])
 def download_resume():
     resume_name = request.args.get('resumeName')
-  
-    blob_client = blob_resume_container_client.get_blob_client('processed/' + resume_name)
-    download_stream = blob_client.download_blob()
-    file_content = download_stream.readall()
-    
-    if file_content:
-        response = make_response(file_content)
-        response.headers['Content-Type'] = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
-        return response
+
+    if resume_name.startswith('enhanced/'):
+        # For enhanced resumes, get the PDF
+        blob_name = resume_name
+        content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
     else:
+        # For regular resumes, get the DOCX from the processed folder
+        blob_name = 'processed/' + resume_name
+        content_type = 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+
+    blob_client = blob_resume_container_client.get_blob_client(blob_name)
+    
+    try:
+        download_stream = blob_client.download_blob()
+        file_content = download_stream.readall()
+
+        response = make_response(file_content)
+        response.headers['Content-Type'] = content_type
+        response.headers['Content-Disposition'] = f'attachment; filename="{resume_name}"'
+        return response
+    except Exception as e:
+        print(f"Error downloading file: {str(e)}")
         return make_response('Failed to download file', 500)
 
 if __name__ == '__main__':

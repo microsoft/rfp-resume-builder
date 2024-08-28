@@ -17,6 +17,7 @@ const EmployeeMatchingPage = () => {
   const [enhancedResults, setEnhancedResults] = useState([]);
   const [isWindowOpen, setIsWindowOpen] = useState(false);
   const [viewingResume, setViewingResume] = useState(null);
+  const [selectedEnhancedResumes, setSelectedEnhancedResumes] = useState([]);
 
   const handleRunMatching = async () => {
     if (!selectedRFP) {
@@ -101,24 +102,27 @@ const EmployeeMatchingPage = () => {
   };
 
   const handleDownloadResumes = async () => {
-    for (const resumeName of selectedRows) {
+    const resumesToDownload = [...selectedRows, ...selectedEnhancedResumes];
+    for (const resumeName of resumesToDownload) {
       setIsLoading(true);
       try {
-        const response = await fetch(`http://localhost:5000/download?resumeName=${resumeName}`, {
+        const url = `http://localhost:5000/download?resumeName=${resumeName}`;
+        
+        const response = await fetch(url, {
           method: 'GET',
           headers: {
             'Access-Control-Allow-Origin': 'http://localhost:3001',
           },
         });
-
+  
         if (!response.ok) {
           throw new Error('Network response was not ok');
         }
-
+  
         const blob = await response.blob();
-        const url = window.URL.createObjectURL(blob);
+        const downloadUrl = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
+        a.href = downloadUrl;
         a.download = resumeName;
         document.body.appendChild(a);
         a.click();
@@ -130,6 +134,14 @@ const EmployeeMatchingPage = () => {
         setIsLoading(false);
       }
     }
+  };
+
+  const handleEnhancedResumeSelect = (resumeName) => {
+    setSelectedEnhancedResumes(prev =>
+      prev.includes(resumeName)
+        ? prev.filter(name => name !== resumeName)
+        : [...prev, resumeName]
+    );
   };
 
   return (
@@ -147,7 +159,7 @@ const EmployeeMatchingPage = () => {
       </div>
       <div className="flex flex-1 px-4 pb-16">
         <div className="w-64 pr-4 flex flex-col space-y-4">
-          <RFPSelector
+        <RFPSelector
             selectedRFPs={selectedRFP}
             onSelectRFP={setSelectedRFP}
             multiSelect={false}
@@ -172,22 +184,25 @@ const EmployeeMatchingPage = () => {
 
           <ActionButtons
             selectedRows={selectedRows}
+            selectedEnhancedResumes={selectedEnhancedResumes}
             onEnhanceResumes={handleEnhanceResumes}
             onDownloadResumes={handleDownloadResumes}
           />
 
           <EnhancedResumes
-                  enhancedResults={enhancedResults}
-                  onResumeClick={handleResumeClick}
-            />
+            enhancedResults={enhancedResults}
+            onResumeClick={handleResumeClick}
+            selectedEnhancedResumes={selectedEnhancedResumes}
+            onEnhancedResumeSelect={handleEnhancedResumeSelect}
+          />
 
           <ResumeViewer
-                  resumeName={viewingResume?.name}
-                  isWindowOpen={isWindowOpen}
-                  onClose={() => {
-                    setIsWindowOpen(false);
-                    setViewingResume(null);
-                  }}
+            resumeName={viewingResume?.name}
+            isWindowOpen={isWindowOpen}
+            onClose={() => {
+              setIsWindowOpen(false);
+              setViewingResume(null);
+            }}
           />
         </div>
       </div>
