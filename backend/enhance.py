@@ -25,7 +25,9 @@ from prompts import reorder_work_experience_prompt
 from docx2pdf import convert
 import tempfile
 import os
-import aspose.words as aw
+import contextlib
+import tempfile
+import time
 
 
 
@@ -176,109 +178,111 @@ def insert_new_project(doc, new_project, insert_phrase):
     print(f"Insert phrase '{insert_phrase}' not found in the document.")
     return False
 
+@contextlib.contextmanager
+def temporary_file(suffix=None):
+    """Context manager for creating and cleaning up a temporary file."""
+    fd, path = tempfile.mkstemp(suffix=suffix)
+    try:
+        os.close(fd)
+        yield path
+    finally:
+        try:
+            os.unlink(path)
+        except OSError:
+            pass
+
 def enhance_resume(resume_name, rfp_name):
     print(f"Enhancing resume {resume_name} for RFP {rfp_name}")
     
-    # Azure setup
-    connect_str = os.getenv("STORAGE_ACCOUNT_CONNECTION_STRING")
-    container_name = "resumes"
-    folder = "processed/"
-    blob_name = folder + resume_name
-
     blob_service_client = BlobServiceClient.from_connection_string(connect_str)
     container_client = blob_service_client.get_container_client(container_name)
+    
+    folder = "processed/"
+    blob_name = folder + resume_name
     blob_client = container_client.get_blob_client(blob_name)
 
-    if blob_client.exists():
-        print(f"Blob {blob_name} found in {container_name}.")
-        
-        # Download the blob content
-        blob_data = blob_client.download_blob().readall()
-        
-        # Load the document
-        doc = Document(BytesIO(blob_data))
+    if not blob_client.exists():
+        print(f"Blob {blob_name} not found in {container_name}.")
+        return None, None
 
-        # Find insert position using LLM
-        insert_phrase = find_insert_position(doc)
+    print(f"Blob {blob_name} found in {container_name}.")
     
-        print(f"Inserting new project before: '{insert_phrase}'")
+    # Download the blob content
+    blob_data = blob_client.download_blob().readall()
+    
+    # Load the document
+    doc = Document(BytesIO(blob_data))
 
-        # New projects to insert
-        new_project_1 = {
+    # Find insert position using LLM
+    insert_phrase = find_insert_position(doc)
+    print(f"Inserting new project before: '{insert_phrase}'")
+
+    # New projects to insert
+    new_projects = [
+        {
             "title": "Extremely Relevant Project Title 1",
             "description": "Worked on an extremely important project that is highly relevant to the RFP"
-        }
-
-        new_project_2 = {
+        },
+        {
             "title": "Extremely Relevant Project Title 2",
             "description": "Worked on an extremely important project that is highly relevant to the RFP"
         }
+    ]
 
-        # Insert the new projects
-        insert_new_project(doc, new_project_1, insert_phrase)
-        insert_new_project(doc, new_project_2, insert_phrase)
+    # Insert the new projects
+    for project in new_projects:
+        insert_new_project(doc, project, insert_phrase)
 
-       # Prepare file names
-        resume_name_without_ext = os.path.splitext(resume_name)[0]
-        enhanced_name = f"{resume_name_without_ext}_enhanced"
-        enhanced_docx_name = f"{enhanced_name}.docx"
-        enhanced_pdf_name = f"{enhanced_name}.pdf"
-        
-        local_docx_path = os.path.join("..", "data", enhanced_docx_name)
-        local_pdf_path = os.path.join("..", "data", enhanced_pdf_name)
+    # Prepare file names
+    resume_name_without_ext = os.path.splitext(resume_name)[0]
+    enhanced_name = f"{resume_name_without_ext}_enhanced"
+    enhanced_docx_name = f"{enhanced_name}.docx"
+    enhanced_pdf_name = f"{enhanced_name}.pdf"
 
-        try:
-            # Save the enhanced DOCX locally
-            doc.save(local_docx_path)
-            print(f"Enhanced resume (DOCX) saved locally as {local_docx_path}")
-            
+    try:
+        with temporary_file(suffix='.docx') as temp_docx_path, temporary_file(suffix='.pdf') as temp_pdf_path:
+            # Save the enhanced DOCX to a temporary file
+            doc.save(temp_docx_path)
+            print(f"Enhanced resume (DOCX) saved to temporary file: {temp_docx_path}")
 
+            # Add a 1-second delay
+            time.sleep(1)
+            enhanced_folder = "enhanced/"
             # Convert DOCX to PDF
-            convert(local_docx_path, local_pdf_path)
-            print(f"Enhanced resume (PDF) saved locally as {local_pdf_path}")
+            try:
+                convert(temp_docx_path, temp_pdf_path)
+                print(f"Enhanced resume (PDF) converted to temporary file: {temp_pdf_path}")
+                # Upload the PDF file to blob storage
+                enhanced_pdf_blob_name = enhanced_folder + enhanced_pdf_name
+                enhanced_pdf_client = container_client.get_blob_client(enhanced_pdf_blob_name)
+                with open(temp_pdf_path, "rb") as pdf_file:
+                    enhanced_pdf_client.upload_blob(pdf_file, overwrite=True)
+                print(f"Enhanced resume (PDF) uploaded as {enhanced_pdf_blob_name}")
+            except Exception as e:
+                print(f"Failed to convert DOCX to PDF: {str(e)}")
+    
 
             # Upload the DOCX file to blob storage
-            enhanced_folder = "enhanced/"
+            
             enhanced_docx_blob_name = enhanced_folder + enhanced_docx_name
             enhanced_docx_client = container_client.get_blob_client(enhanced_docx_blob_name)
-
-            with open(local_docx_path, "rb") as docx_file:
+            with open(temp_docx_path, "rb") as docx_file:
                 enhanced_docx_client.upload_blob(docx_file, overwrite=True)
             print(f"Enhanced resume (DOCX) uploaded as {enhanced_docx_blob_name}")
 
-            # Upload the PDF file to blob storage
-            enhanced_pdf_blob_name = enhanced_folder + enhanced_pdf_name
-            enhanced_pdf_client = container_client.get_blob_client(enhanced_pdf_blob_name)
+            
 
-            with open(local_pdf_path, "rb") as pdf_file:
-                enhanced_pdf_client.upload_blob(pdf_file, overwrite=True)
-            print(f"Enhanced resume (PDF) uploaded as {enhanced_pdf_blob_name}")
+        return enhanced_docx_blob_name
 
-            # Clean up local files
-            os.remove(local_docx_path)
-            os.remove(local_pdf_path)
-            print("Local files cleaned up")
-
-            return enhanced_docx_blob_name, enhanced_pdf_blob_name
-
-        except Exception as e:
-            print(f"Failed to enhance resume: {str(e)}")
-            # Clean up local files in case of error
-            if os.path.exists(local_docx_path):
-                os.remove(local_docx_path)
-            if os.path.exists(local_pdf_path):
-                os.remove(local_pdf_path)
-            return None, None
-
-    else:
-        print(f"Blob {blob_name} not found in {container_name}.")
+    except Exception as e:
+        print(f"Failed to enhance resume: {str(e)}")
         return None, None
 
 
 #Main function
 if __name__ == "__main__":
 
-    resume_name = "Abhay Ashok 717569"
+    resume_name = "Abhay Ashok 717569.docx"
     #resume_name = "a rajasekar 702292"
    # resume_name = "Acker George 717841"
     #resume_name = "Adam Frank 87487"

@@ -7,7 +7,7 @@ import requests
 import os
 from langchain_openai import AzureChatOpenAI
 from helper_functions import get_rfp_analysis_from_db
-
+from enhance import enhance_resume
 from upload import process_rfp
 from search import search
 
@@ -116,36 +116,56 @@ def generate_mock_enhanced_resume_link(resume_id, rfp_name):
     return f"http://example.com/enhanced-resumes/{resume_id}.pdf"
 
 @app.route('/enhance', methods=['POST'])
-def enhance_resume():
+def enhance():
     data = request.json
     resume_name = data.get('resumeName')
     rfp_name = data.get('rfpName')
-    print(f"Enhancing resume {resume_name} for RFP {rfp_name}")
-
+    
     if not resume_name or not rfp_name:
-        return jsonify({"error": "Missing resumeId or rfpName"}), 400
+        return jsonify({"error": "Missing resumeName or rfpName"}), 400
 
-    # In a real implementation, you would process the resume here
-    # For this mock-up, we'll just generate a fake enhanced resume link
-    enhanced_resume_link = generate_mock_enhanced_resume_link(resume_name, rfp_name)
-
-    return jsonify({
-        "enhancedResumeLink": enhanced_resume_link
-    }), 200
+    try:
+        # Call the enhance_resume function from enhance.py
+        
+        enhanced_resume_name = enhance_resume(resume_name, rfp_name)
+        
+        # Generate the URL for the enhanced resume
+        enhanced_resume_url = f"{request.host_url}download?resumeName={enhanced_resume_name}"
+        
+        return jsonify({
+            "enhancedResumeLink": enhanced_resume_url,
+            "enhancedResumeName": enhanced_resume_name
+        }), 200
+    except Exception as e:
+        print(f"Error enhancing resume: {str(e)}")
+        return jsonify({"error": "An error occurred while enhancing the resume"}), 500
 
 @app.route('/resume', methods=['GET'])
 def get_resume():
-    resume_name = request.args.get('resumeName')[:-4] + 'pdf'
-  
-    blob_client = blob_resume_container_client.get_blob_client('pdf/' + resume_name)
-    download_stream = blob_client.download_blob()
-    file_content = download_stream.readall()
+    resume_name = request.args.get('resumeName')
+    print(f"Input: {resume_name}")
     
-    if file_content:
+    if resume_name.startswith('enhanced/'):
+        # For enhanced resumes, we already have the full blob name
+        blob_name = resume_name.replace('.docx', '.pdf')
+        
+    else:
+        # For regular resumes, construct the blob name
+        blob_name = resume_name.replace('.docx', '.pdf')
+        blob_name = f'pdf/{blob_name}'
+
+    print(f"Blob name: {blob_name}")
+    blob_client = blob_resume_container_client.get_blob_client(blob_name)
+
+    try:
+        download_stream = blob_client.download_blob()
+        file_content = download_stream.readall()
+
         response = make_response(file_content)
         response.headers['Content-Type'] = 'application/pdf'
         return response
-    else:
+    except Exception as e:
+        print(f"Error downloading file: {str(e)}")
         return make_response('Failed to download file', 500)
     
 @app.route('/download', methods=['GET'])

@@ -26,6 +26,12 @@ Make sure to just output the list and no other commentary. You also need to cons
 
 Guidance: Always output in valid JSON with two fields: search_query and filter. Filter should be an empty string if the user does not provide any sort of filtering criteria. Filter is OData syntax and will be used in Azure Cognitive Search. 
 
+Your search index has the following fields:
+- name
+- jobTitle
+- experienceLevel
+
+If the additional user input asks for something that is not a field on the search index, don't add a filter, just revise the search query. 
 
 <Example>
 
@@ -81,7 +87,57 @@ Assistant: {
   "filter": "experienceLevel ge 10"
 }
 
+User:
+## Write up: Analysis
 
+### Win Themes
+1. **Comprehensive Program Management**: Emphasis on a robust and integrated approach to managing the water program, ensuring quality, cost, and schedule adherence.
+2. **Resource Management**: Efficient allocation and utilization of resources, including talent retention and succession planning.
+3. **Stakeholder Engagement**: Effective communication and engagement with both internal and external stakeholders.
+4. **Emergency Support**: Rapid and knowledgeable response to water system emergencies.
+
+### Most Important Skills and Experience
+1. **Program Management Expertise**: Proven experience in managing large-scale water infrastructure projects, including integration with client teams and optimizing communication.
+2. **Resource Allocation and Management**: Ability to efficiently manage resources, including human resources, to ensure project success. This includes talent retention, succession planning, and training programs.
+3. **Stakeholder Engagement**: Experience in engaging and managing relationships with a diverse group of stakeholders, including government entities, community groups, and other relevant parties. 
+4. **Emergency Response**: Demonstrated capability in handling water system emergencies, including quick diagnosis and resolution of issues.
+5. **Regulatory Compliance**: Knowledge of and compliance with relevant regulations, including the Service Contract Act and DBE/WBE inclusion goals.
+6. **Technical Proficiency**: Strong technical background in water and sewer infrastructure, including design, construction management, and advanced wastewater treatment.
+7. **Communication Skills**: Excellent written and verbal communication skills to ensure clear and effective interaction with all project stakeholders.
+8. **Experience with DC Water Systems**: Familiarity with DC Water’s infrastructure, including the Blue Plains Advanced Wastewater Treatment Plant and the extensive network of pipes, valves, and pumping stations.
+
+Additional User Input: show me engineers only
+
+Assistant: {
+  "search_query": "Program Management Expertise in Water Infrastructure, Resource Allocation and Management in Water Projects, Stakeholder Engagement in Water Systems, Emergency Response for Water Systems",
+  "filter": "search.ismatch('Engineer', 'jobTitle')"
+}
+
+User:
+## Write up: Analysis
+
+### Win Themes
+1. **Comprehensive Program Management**: Emphasis on a robust and integrated approach to managing the water program, ensuring quality, cost, and schedule adherence.
+2. **Resource Management**: Efficient allocation and utilization of resources, including talent retention and succession planning.
+3. **Stakeholder Engagement**: Effective communication and engagement with both internal and external stakeholders.
+4. **Emergency Support**: Rapid and knowledgeable response to water system emergencies.
+
+### Most Important Skills and Experience
+1. **Program Management Expertise**: Proven experience in managing large-scale water infrastructure projects, including integration with client teams and optimizing communication.
+2. **Resource Allocation and Management**: Ability to efficiently manage resources, including human resources, to ensure project success. This includes talent retention, succession planning, and training programs.
+3. **Stakeholder Engagement**: Experience in engaging and managing relationships with a diverse group of stakeholders, including government entities, community groups, and other relevant parties. 
+4. **Emergency Response**: Demonstrated capability in handling water system emergencies, including quick diagnosis and resolution of issues.
+5. **Regulatory Compliance**: Knowledge of and compliance with relevant regulations, including the Service Contract Act and DBE/WBE inclusion goals.
+6. **Technical Proficiency**: Strong technical background in water and sewer infrastructure, including design, construction management, and advanced wastewater treatment.
+7. **Communication Skills**: Excellent written and verbal communication skills to ensure clear and effective interaction with all project stakeholders.
+8. **Experience with DC Water Systems**: Familiarity with DC Water’s infrastructure, including the Blue Plains Advanced Wastewater Treatment Plant and the extensive network of pipes, valves, and pumping stations.
+
+Additional User Input: show me people skilled in masonry
+
+Assistant: {
+  "search_query": "Program Management Expertise in Water Infrastructure, Resource Allocation and Management in Water Projects, Stakeholder Engagement in Water Systems, Emergency Response for Water Systems. Masonry",
+  "filter": ""
+}
 
 <end examples>
 
